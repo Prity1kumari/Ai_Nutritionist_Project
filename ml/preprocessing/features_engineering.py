@@ -31,7 +31,7 @@ def create_target(df, mode="multiclass"):
     # ===============================
     if mode == "binary":
         df["target"] = df["nutriscore_grade"].apply(
-            lambda x: "Healthy" if x in ["A", "B"] else "Unhealthy"
+            lambda x: "Healthy" if x in ["A", "B"]  else "Moderate" if x == "C" else "Unhealthy"
         )
 
     else:

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import numpy as np
 import pandas as pd
 import re
@@ -91,6 +91,3 @@ def clean_data(df):
 
     return df
 print("Data cleaning function is ready.")
-=======
-
->>>>>>> 61cdeceb0c5b136049d30400cc7322a4b19be4eb
