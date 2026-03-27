@@ -9,3 +9,4 @@ class FoodInput(BaseModel):
     fiber: float
     protein: float
     salt: float
+    ingredients: str
