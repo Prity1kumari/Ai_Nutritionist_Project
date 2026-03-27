@@ -6,7 +6,8 @@ from xgboost import XGBClassifier
 
 def load_dataset():
 
-    df = pd.read_csv("../data/final_data.csv")
+    # df = pd.read_csv("../data/final_data.csv")
+    df = pd.read_csv("/Users/nishantkumarpubgplayergmail.com/Desktop/nishant codes/Ai_Nutritionist_Project/ml/data/final_data.csv")
 
     df=df.drop(columns=["nutrition-score-fr_100g","target","nutriscore_grade"])
 
