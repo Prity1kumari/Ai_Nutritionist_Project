@@ -1,49 +1,38 @@
-from langchain_google_genai import ChatGoogleGenrativeAI
-from langchain_core.prompts import PromptTemplate
-
+import google.generativeai as genai
 import os
-import json
-
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
+# configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash",temperature=0)
-
-
-prompt=PromptTemplate(
-    input_variables=["ingredients"],
-    template= """
-You are a nutrition expert.
-
-Analyze the following ingredients:
-{ingredients}
-
-Identify harmful or risky ingredients and explain briefly.
-
-Return ONLY JSON in this format:
-[
-  {{
-    "ingredient": "name",
-    "risk": "short explanation"
-  }}
-]
-"""
-)
-
-chain = prompt | llm
+model = genai.GenerativeModel("gemini-flash-latest")
 
 
-def analyze_ingredients_llm(ingredients: str):
+def analyze_ingredients_llm(ingredients):
 
-    response = chain.invoke({"ingredients": ingredients})
+    prompt = f"""
+    You are a nutrition expert.
 
-    text = response.content.strip()
+    Analyze the following ingredients:
+    {ingredients}
 
-    # 🔥 clean markdown if Gemini returns ```json
-    if "```" in text:
-        text = text.split("```")[1]
+    Identify harmful or risky ingredients and explain briefly.
+
+    Return ONLY JSON in this format:
+    [
+      {{
+        "ingredient": "name",
+        "risk": "short explanation"
+      }}
+    ]
+    """
+
+    response = model.generate_content(prompt)
+
+    text = response.text
 
     try:
         return json.loads(text)
