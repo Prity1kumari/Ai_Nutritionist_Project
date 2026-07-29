@@ -1,16 +1,30 @@
-import os
 import pickle
 import numpy as np
-# go 3 levels up → backend/app/services → backend → project root
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
 
-MODEL_PATH = os.path.join(BASE_DIR, "ml", "models", "nutrition_model.pkl")
+from app.core.config import MODEL_PATH
+from app.core.logger import logger
 
-print("MODEL PATH:", MODEL_PATH)  # debug
+# Load model once when the application starts
+try:
+    with open(MODEL_PATH, "rb") as f:
+        model = pickle.load(f)
+    logger.info(f"Model loaded successfully from {MODEL_PATH}")
+except Exception as e:
+    logger.error(f"Failed to load model: {e}")
+    raise
 
-model = pickle.load(open(MODEL_PATH, "rb"))
 
 def predict_health(data):
+    """
+    Predict the health score of a food item.
+
+    Returns:
+        dict: {
+            "health_score": int,
+            "confidence": float
+        }
+    """
+
     features = np.array([[
         data.energy,
         data.fat,
@@ -22,6 +36,13 @@ def predict_health(data):
         data.salt
     ]])
 
-    prediction = model.predict(features)
+    prediction = model.predict(features)[0]
 
-    return int(prediction[0])  # if encoded
+    confidence = None
+    if hasattr(model, "predict_proba"):
+        confidence = float(np.max(model.predict_proba(features)))
+
+    return {
+        "health_score": int(prediction),
+        "confidence": confidence
+    }

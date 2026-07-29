@@ -1,18 +1,16 @@
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
 import json
 
-load_dotenv()
+from app.core.config import GOOGLE_API_KEY, GEMINI_MODEL
 
-# configure Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Configure Gemini
+genai.configure(api_key=GOOGLE_API_KEY)
 
-model = genai.GenerativeModel("gemini-flash-latest")
+# Initialize model once
+model = genai.GenerativeModel(GEMINI_MODEL)
 
 
 def analyze_ingredients_llm(ingredients):
-
     prompt = f"""
     You are a nutrition expert.
 
@@ -21,7 +19,8 @@ def analyze_ingredients_llm(ingredients):
 
     Identify harmful or risky ingredients and explain briefly.
 
-    Return ONLY JSON in this format:
+    Return ONLY valid JSON in this format:
+
     [
       {{
         "ingredient": "name",
@@ -32,9 +31,18 @@ def analyze_ingredients_llm(ingredients):
 
     response = model.generate_content(prompt)
 
-    text = response.text
+    text = response.text.strip()
+
+    # Remove markdown code fences if Gemini returns them
+    if text.startswith("```json"):
+        text = text.replace("```json", "").replace("```", "").strip()
+    elif text.startswith("```"):
+        text = text.replace("```", "").strip()
 
     try:
         return json.loads(text)
-    except:
-        return {"raw_output": text}
+    except json.JSONDecodeError:
+        return {
+            "error": "Invalid JSON returned by Gemini",
+            "raw_output": text
+        }
