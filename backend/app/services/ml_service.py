@@ -4,25 +4,50 @@ import numpy as np
 from app.core.config import MODEL_PATH
 from app.core.logger import logger
 
-# Load model once when the application starts
+
+# ==========================
+# Health Grade Mapping
+# ==========================
+
+GRADE_MAP = {
+    0: "A",
+    1: "B",
+    2: "C",
+    3: "D",
+    4: "E"
+}
+
+DESCRIPTION_MAP = {
+    "A": "Very Healthy",
+    "B": "Healthy",
+    "C": "Moderately Healthy",
+    "D": "Less Healthy",
+    "E": "Unhealthy"
+}
+
+
+# ==========================
+# Load Model Once
+# ==========================
+
 try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
-    logger.info(f"Model loaded successfully from {MODEL_PATH}")
+
+    logger.info("Nutrition model loaded successfully.")
+
 except Exception as e:
-    logger.error(f"Failed to load model: {e}")
+    logger.error(f"Unable to load model: {e}")
     raise
 
+
+# ==========================
+# Prediction Function
+# ==========================
 
 def predict_health(data):
     """
     Predict the health score of a food item.
-
-    Returns:
-        dict: {
-            "health_score": int,
-            "confidence": float
-        }
     """
 
     features = np.array([[
@@ -36,13 +61,29 @@ def predict_health(data):
         data.salt
     ]])
 
-    prediction = model.predict(features)[0]
+    logger.info(f"Input Features: {features.tolist()}")
 
+    # Prediction
+    prediction = int(model.predict(features)[0])
+
+    # Confidence
     confidence = None
+
     if hasattr(model, "predict_proba"):
-        confidence = float(np.max(model.predict_proba(features)))
+        confidence = round(
+            float(np.max(model.predict_proba(features))),
+            2
+        )
+
+    grade = GRADE_MAP.get(prediction, "Unknown")
+
+    logger.info(
+        f"Prediction={prediction}, Grade={grade}, Confidence={confidence}"
+    )
 
     return {
-        "health_score": int(prediction),
+        "score": prediction,
+        "grade": grade,
+        "description": DESCRIPTION_MAP.get(grade, "Unknown"),
         "confidence": confidence
     }
