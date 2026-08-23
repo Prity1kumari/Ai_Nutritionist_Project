@@ -12,7 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Import Retriever
 # ======================================
 
-from knowledge_base.retriever import retriever
+from knowledge_base.retriever import get_retriever
 
 # ======================================
 # Test
@@ -20,6 +20,7 @@ from knowledge_base.retriever import retriever
 
 query = input("Ask your question: ")
 
+retriever = get_retriever()
 docs = retriever.invoke(query)
 
 print("\nRetrieved Documents:\n")

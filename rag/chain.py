@@ -3,7 +3,7 @@ from pathlib import Path
 from rag.question_classifier import classify_question
 
 from knowledge_base.service import get_knowledge
-from knowledge_base.retriever import retriever
+from knowledge_base.retriever import get_retriever
 
 from rag.context_builder import format_ingredient_context
 from rag.prompt import build_prompt
@@ -12,6 +12,10 @@ from rag.utils import format_context
 
 
 def ask_nutritionist(question: str):
+
+    # ==========================
+    # Question Classification
+    # ==========================
 
     question_type = classify_question(question)
 
@@ -23,19 +27,10 @@ def ask_nutritionist(question: str):
 
     if question_type == "GENERAL":
 
-        response = llm.generate_content(
-            f"""
-You are a helpful AI assistant.
-
-Answer naturally and conversationally.
-
-Question:
-{question}
-"""
-        )
+        response = llm.generate_content(question)
 
         return {
-            "answer": response.text,
+            "answer": response.text.strip(),
             "sources": []
         }
 
@@ -50,15 +45,17 @@ Question:
     )
 
     # ==========================
-    # Retrieve PDFs
+    # Retriever
     # ==========================
+
+    retriever = get_retriever()
 
     docs = retriever.invoke(question)
 
     pdf_context = format_context(docs)
 
     # ==========================
-    # Merge Context
+    # Context
     # ==========================
 
     context = f"""
@@ -66,7 +63,7 @@ Question:
 
 {ingredient_context}
 
-========== OFFICIAL SUPPORTING DOCUMENTS ==========
+========== DOCUMENT INFORMATION ==========
 
 {pdf_context}
 """
@@ -80,7 +77,31 @@ Question:
         context
     )
 
+    print("\n========== PROMPT ==========\n")
+    print(prompt[:5000])
+    print("\n============================\n")
+
+    # ==========================
+    # LLM Response
+    # ==========================
+
     response = llm.generate_content(prompt)
+
+    answer = response.text.strip()
+
+    # ==========================
+    # Fallback
+    # ==========================
+
+    if (
+        not answer
+        or "I don't have enough information" in answer
+    ):
+        print("Using Gemini fallback...")
+
+        response = llm.generate_content(question)
+
+        answer = response.text.strip()
 
     # ==========================
     # Sources
@@ -106,7 +127,11 @@ Question:
 
         source = {
             "type": "document",
-            "source": Path(source_path).name if source_path else "Unknown",
+            "source": (
+                Path(source_path).name
+                if source_path
+                else "Unknown"
+            ),
             "page": doc.metadata.get("page")
         }
 
@@ -114,6 +139,6 @@ Question:
             sources.append(source)
 
     return {
-        "answer": response.text,
+        "answer": answer,
         "sources": sources
     }

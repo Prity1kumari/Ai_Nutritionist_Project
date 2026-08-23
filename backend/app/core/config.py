@@ -25,11 +25,11 @@ API_VERSION = os.getenv("API_VERSION", "1.0.0")
 # Gemini Configuration
 # ======================================
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
     raise ValueError(
-        "GOOGLE_API_KEY not found. Please add it to the project root .env"
+        "GEMINI_API_KEY or GOOGLE_API_KEY not found. Please add it to the project root .env"
     )
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-3.6-flash")

@@ -11,10 +11,10 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 
 load_dotenv(BASE_DIR / ".env")
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY not found.")
+    raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY not found.")
 
 # Change this whenever Google releases a new model
 GEMINI_MODEL = "models/gemini-3.6-flash"
